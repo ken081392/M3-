@@ -1,0 +1,39 @@
+/* footer的基本樣式 */
+.footer {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10; /* 確保不會蓋住其他重要內容 */
+    background-color: #f8f9fa;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 版權聲明的樣式 */
+.footer p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* footer連結的樣式 */
+.footer-links a {
+    margin: 0 15px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+/* 社交媒體圖標的樣式 */
+.social-media a img {
+    width: 24px;
+    height: 24px;
+    margin: 0 10px;
+    vertical-align: middle;
+}

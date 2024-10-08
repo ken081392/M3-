@@ -1,0 +1,32 @@
+.post {
+    border-bottom: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 0;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.post h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.post p {
+    margin: 5px 0;
+    color: #555;
+}
+
+/* 樣式化選單和按鈕 */
+.post-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.posts-section {
+    width: 60%; /* 中間發佈文章區 */
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
