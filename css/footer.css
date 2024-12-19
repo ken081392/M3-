@@ -1,10 +1,10 @@
 /* footer的基本樣式 */
 .footer {
-    position: relative;
+    position: fixed; /* 固定在頁面底部 */
     bottom: 0;
     left: 0;
     width: 100%;
-    z-index: 10; /* 確保不會蓋住其他重要內容 */
+    z-index: 10; /* 確保頁尾不會被其他內容蓋住 */
     background-color: #f8f9fa;
     padding: 20px;
     text-align: center;

@@ -1,10 +1,4 @@
-.post {
-    border-bottom: 1px solid #ddd;
-    padding: 15px;
-    margin: 10px 0;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
+
 
 .post h3 {
     margin: 0;
@@ -25,8 +19,21 @@
 }
 
 .posts-section {
-    width: 60%; /* 中間發佈文章區 */
-    background-color: #fff;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%; /* 調整文章列表的寬度，填滿父容器的 80% */
+    max-width: 1200px; /* 最大寬度設置為 1200px，可以根據實際需求調整 */
+    margin: 0 auto; /* 水平置中 */
+    padding: 20px; /* 添加內邊距 */
+    background-color: #fff; /* 背景顏色 */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* 輕微陰影效果 */
+    border-radius: 8px; /* 添加圓角 */
+}
+
+.post {
+    width: 100%; /* 每篇文章填滿父容器 */
+    margin-bottom: 20px; /* 每篇文章之間的間距 */
+    padding: 15px;
+    border: 1px solid #ddd; /* 添加邊框 */
+    background-color: #f9f9f9; /* 每篇文章的背景色 */
+    border-radius: 5px; /* 圓角 */
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1); /* 陰影效果 */
 }

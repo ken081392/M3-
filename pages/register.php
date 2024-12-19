@@ -26,26 +26,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
+        // 檢查用戶名或 Email 是否已經存在
         $check_user = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-        $check_user->bind_param("ss", $username, $email);
-        $check_user->execute();
-        $check_user->store_result();
-        
-        if ($check_user->num_rows > 0) {
-            $error_message = "用戶名或Email已經被註冊";
-        } else {
-            $stmt = $conn->prepare("INSERT INTO users (username, email, password, birthdate) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $username, $email, $hashed_password, $birthdate);
-
-            if ($stmt->execute()) {
-                echo "註冊成功！";
+        if ($check_user) {
+            $check_user->bind_param("ss", $username, $email);
+            $check_user->execute();
+            $check_user->store_result();
+            
+            if ($check_user->num_rows > 0) {
+                $error_message = "用戶名或 Email 已經被註冊。";
             } else {
-                $error_message = "註冊失敗，請重試。";
-            }
-        }
+                // 插入新用戶
+                $stmt = $conn->prepare("INSERT INTO users (username, email, password, birthdate) VALUES (?, ?, ?, ?)");
+                if ($stmt) {
+                    $stmt->bind_param("ssss", $username, $email, $hashed_password, $birthdate);
 
-        $check_user->close();
-        $stmt->close();
+                    if ($stmt->execute()) {
+                        echo "註冊成功！";
+                    } else {
+                        $error_message = "註冊失敗，請重試。";
+                    }
+                    $stmt->close();
+                } else {
+                    $error_message = "資料庫錯誤：無法準備插入語句。";
+                }
+            }
+            $check_user->close();
+        } else {
+            $error_message = "資料庫錯誤：無法準備檢查語句。";
+        }
     }
 }
 
@@ -77,10 +86,14 @@ $conn->close();
     <?php include '../includes/header.php'; ?>
     <div class="container">
         <h2>用戶註冊</h2>
+
+
         
         <!-- 顯示錯誤信息 -->
         <?php if (!empty($error_message)): ?>
-            <div class="error"><?php echo $error_message; ?></div>
+            <div class="error" style="color: red; font-weight: bold;">
+                <?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
         <?php endif; ?>
 
         <form action="register.php" method="POST" onsubmit="return validateForm()">

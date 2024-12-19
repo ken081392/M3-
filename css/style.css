@@ -6,14 +6,16 @@ html, body {
     overflow-x: hidden;
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     display: flex;
     padding-bottom: 100px;
     flex-direction: column;
-}
-
-.main-content {
-    flex: 1; /* 將主要內容區撐滿剩餘高度 */
 }
 
 
@@ -24,25 +26,35 @@ body {
     font-size: 14px;
 }
 
-.title-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
+/* 容器樣式 */
+.header-posts {
+    display: flex; /* 使用 Flexbox 排版 */
+    justify-content: space-between; /* 左右對齊，標題在左，按鈕在右 */
+    align-items: center; /* 垂直居中對齊 */
+    padding: 10px; /* 添加內邊距 */
+    border-bottom: 1px solid #ccc; /* 底部加一條分隔線 */
 }
 
-.content-area {
-    width: 100%;
-    height: 300px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
+/* 標題樣式 */
+.header-posts h2 {
+    margin: 0; /* 去除默認外邊距 */
+    font-size: 24px; /* 設置字體大小 */
 }
 
-.disabled-btn {
-    background-color: #ccc; /* 禁用按鈕顏色 */
-    cursor: not-allowed;    /* 顯示禁用游標 */
+/* 按鈕樣式 */
+.create a {
+    display: inline-block; /* 使按鈕可以有內邊距 */
+    background-color: #007B8E; /* 按鈕背景顏色 */
+    color: #ffffff; /* 文字顏色 */
+    text-decoration: none; /* 去除超連結的底線 */
+    padding: 8px 16px; /* 內邊距 */
+    border-radius: 4px; /* 圓角邊框 */
+    font-size: 16px; /* 字體大小 */
+    font-weight: bold; /* 加粗 */
+    text-align: center; /* 文字居中 */
+    cursor: pointer; /* 滑鼠懸停時顯示手指 */
+}
+
+.create a:hover {
+    background-color: #005F6B; /* 滑鼠懸停顏色變深 */
 }

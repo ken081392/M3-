@@ -1,4 +1,7 @@
 <?php
+
+use function PHPSTORM_META\type;
+
 session_start();
 // 包含資料庫連接檔案
 include '../includes/db_connection.php';
@@ -12,8 +15,11 @@ $query = "
     ORDER BY posts.created_at DESC 
     LIMIT 10
 ";
-$result = $conn->query($query);
+$postsResult = $conn->query($query);  // 使用不同變數儲存文章查詢結果
 
+// 查詢分類
+$sql = "SELECT name, slug, description FROM categories ORDER BY id ASC";
+$categoriesResult = $conn->query($sql);  // 使用不同變數儲存分類查詢結果
 ?>
 
 <!DOCTYPE html>
@@ -25,34 +31,85 @@ $result = $conn->query($query);
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/post.css">
+    <script>
+        function navigateToCategory(category) {
+            if (category) {
+                window.location.href = category;
+            }
+        }
+    </script>
+
 </head>
 <body>
-    <?php include '../includes/header.php'; ?>  
+    <?php include '../includes/header.php'; ?>
 
     <div class="main-content">
         <!-- 分類區塊 -->
-        <div class="category-section">
+        <div class="category-dropdown">
             <h2>分類</h2>
-            <ul>
-                <li><a href="#">性別平等</a></li>
-                <li><a href="#">遊戲專區</a></li>
-            </ul>
+            <select name="category" id="category" onchange="navigateToCategory(this.value)">
+                <option value="">SDGS分類</option>
+                <?php while ($row = $categoriesResult->fetch_assoc()): ?>
+                    <option value="category.php?type=<?php echo $row['slug']; ?>">
+                        <?php echo $row['name']; ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
         </div>
 
-        <!-- 發佈的文章區塊，合併最新文章 -->
+        <!-- 發佈的文章區塊 -->
         <div class="posts-section">
-            <h2>發佈的文章</h2>
+            <div class="header-posts">
+                <h2>發佈的文章</h2>
+                <div class="create">
+                    <a href="../pages/create_post.php">發布</a>
+                </div>
+            </div>
+            
             <?php
-            if ($result->num_rows > 0):
-                while ($row = $result->fetch_assoc()):
+            if ($postsResult->num_rows > 0):
+                while ($row = $postsResult->fetch_assoc()):
             ?>
                 <div class="post">
                     <a href="post_detail.php?id=<?php echo $row['id']; ?>" class="post-link">
+                        <?php
+                        // 根據 question_type 显示相应的文字
+                        switch ($row['question_type']) {
+                            case 'type0':
+                                $question_type_text = '[問題]';
+                                break;
+                            case 'type1':
+                                $question_type_text = '[情報]';
+                                break;
+                            case 'type2':
+                                $question_type_text = '[心得]';
+                                break;
+                            case 'type3':
+                                $question_type_text = '[討論]';
+                                break;
+                            case 'type4':
+                                $question_type_text = '[攻略]';
+                                break;
+                            case 'type5':
+                                $question_type_text = '[密技]';
+                                break;
+                            case 'type6':
+                                $question_type_text = '[閒聊]';
+                                break;
+                            case 'type7':
+                                $question_type_text = '[其他]';
+                                break;
+                            default:
+                                $question_type_text = '[未知類型]';
+                        }
+                        ?>
+                        <h3><?php echo htmlspecialchars($question_type_text); ?></h3>
                         <h3><?php echo htmlspecialchars($row['title']); ?></h3>
                         <p><?php echo mb_substr(htmlspecialchars($row['content']), 0, 100); ?>...</p>
                     </a>
                     <span>由 <?php echo htmlspecialchars($row['username']); ?> 發布於 <?php echo $row['created_at']; ?></span>
                 </div>
+
             <?php
                 endwhile;
             else:
@@ -70,8 +127,6 @@ $result = $conn->query($query);
             </ul>
         </div>
     </div>
-
-    <a href="../pages/create_post.php">發布</a> <!-- 發布文章按鈕 -->
 
     <?php include '../includes/footer.php'; ?>
     <?php
