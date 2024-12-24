@@ -28,13 +28,18 @@ if ($result->num_rows === 0) {
 $delete_query = "DELETE FROM posts WHERE id = ?";
 $delete_stmt = $conn->prepare($delete_query);
 $delete_stmt->bind_param("i", $post_id);
-$delete_stmt->execute();
+
+if (!$delete_stmt->execute()) {
+    // 若刪除語句執行失敗，輸出錯誤資訊
+    die("刪除失敗，SQL 錯誤：" . $delete_stmt->error);
+}
 
 if ($delete_stmt->affected_rows > 0) {
-    echo "文章刪除成功！";
-    header("Location: index.php"); // 回到首頁或其他列表頁
+    // 刪除成功
+    header("Location: index.php?message=success");
     exit;
 } else {
-    echo "刪除失敗，請重試。";
+    // 刪除失敗，彈出提示框
+    echo "<script>alert('刪除失敗，文章可能已不存在或權限不足。'); window.location.href='index.php';</script>";
 }
 ?>

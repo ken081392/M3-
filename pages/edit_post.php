@@ -119,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <h1>編輯文章</h1>
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
             <label for="title">標題</label>
             <input type="text" name="title" id="title" class="form-input" value="<?php echo htmlspecialchars($post['title']); ?>" required>
             

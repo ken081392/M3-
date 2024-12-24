@@ -6,50 +6,53 @@ $conn = OpenCon();
 $category = null;
 $postsResult = null;
 
-if (isset($_GET['type'])) {
+if (isset($_GET['type']) && !empty($_GET['type'])) {
     $slug = htmlspecialchars($_GET['type'], ENT_QUOTES, 'UTF-8');
 
     // 查詢分類
     $sql = "SELECT id, name, description, image_path FROM categories WHERE slug = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $slug);
-    $stmt->execute();
-    $result = $stmt->get_result();
 
+    if ($stmt === false) {
+        die("SQL Error: " . $conn->error);
+    }
+
+    $stmt->bind_param("s", $slug);
+    if (!$stmt->execute()) {
+        die("Execute failed: (" . $stmt->errno . ") " . $stmt->error);
+    }
+
+    $result = $stmt->get_result();
     if ($result->num_rows > 0) {
-        // 如果分類存在，取得該分類資訊
         $category = $result->fetch_assoc();
-    
-        // 準備查詢該分類中的文章
+
+        // 查詢該分類中的文章
         $postQuery = "SELECT posts.*, users.username 
                       FROM posts 
                       INNER JOIN users ON posts.author_id = users.id 
-                      WHERE posts.category_id = ?"; // 假設 posts 表的欄位為 category_id
+                      WHERE posts.category = ?";
         $postStmt = $conn->prepare($postQuery);
-    
-        // 綁定分類 ID
-        $postStmt->bind_param("i", $category['id']);
-        $postStmt->execute();
-    
-        // 獲取查詢結果
-        $postsResult = $postStmt->get_result();
-    
-        // 處理查詢結果（例如輸出文章列表）
-        if ($postsResult->num_rows > 0) {
-            while ($post = $postsResult->fetch_assoc()) {
-                echo "Title: " . $post['title'] . " - Author: " . $post['username'] . "<br>";
-            }
-        } else {
-            echo "這個分類目前沒有文章。";
+
+        if ($postStmt === false) {
+            die("SQL Error: " . $conn->error);
         }
+
+        $postStmt->bind_param("i", $category['id']);
+        if (!$postStmt->execute()) {
+            die("Execute failed: (" . $postStmt->errno . ") " . $postStmt->error);
+        }
+
+        $postsResult = $postStmt->get_result();
     } else {
-        // 如果分類不存在
         echo "分類不存在。";
     }
+} else {
+    echo "分類類型未指定或無效。";
 }
 
 CloseCon($conn);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,7 +103,7 @@ CloseCon($conn);
             <!-- 顯示文章列表 -->
             <div class="posts-section">
                 <div class="header-posts">
-                    <h2>文章列表</h2>
+                    <h2>文章</h2>
                     <div class="create">
                         <a href="../pages/create_post.php">發布</a>
                     </div>
