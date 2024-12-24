@@ -7,12 +7,6 @@ include '../includes/db_connection.php';
 // 使用 OpenCon 函數連接資料庫
 $conn = OpenCon();
 
-// 測試資料庫連接
-if ($conn->connect_error) {
-    die("資料庫連接失敗: " . $conn->connect_error);
-} else {
-    echo "資料庫連接成功";
-}
 
 ?>
 <!DOCTYPE html>
