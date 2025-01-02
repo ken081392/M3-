@@ -1,19 +1,25 @@
 <?php
 session_start();
 include '../includes/db_connection.php';
-
 $conn = OpenCon();
 
-// 確認用戶是否登入
-if (!isset($_SESSION['user_id'])) {
-    die("請先登入後再執行刪除操作。");
+// 確認請求是否為 POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(["success" => false, "message" => "無效的請求方式"]);
+    exit();
 }
 
-// 驗證是否有正確的留言 ID
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $comment_id = intval($_GET['id']);
-} else {
-    die("無效的留言 ID。");
+// 驗證是否已登入
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(["success" => false, "message" => "請先登入"]);
+    exit();
+}
+
+// 驗證留言 ID
+$comment_id = intval($_POST['comment_id'] ?? 0);
+if ($comment_id <= 0) {
+    echo json_encode(["success" => false, "message" => "無效的留言 ID"]);
+    exit();
 }
 
 // 驗證是否為留言作者
@@ -25,11 +31,13 @@ $result = $stmt->get_result();
 $comment = $result->fetch_assoc();
 
 if (!$comment) {
-    die("找不到該留言。");
+    echo json_encode(["success" => false, "message" => "找不到該留言"]);
+    exit();
 }
 
 if ($comment['user_id'] != $_SESSION['user_id']) {
-    die("您沒有權限刪除此留言。");
+    echo json_encode(["success" => false, "message" => "您沒有權限刪除此留言"]);
+    exit();
 }
 
 // 刪除留言
@@ -38,11 +46,10 @@ $stmt = $conn->prepare($delete_query);
 $stmt->bind_param("i", $comment_id);
 
 if ($stmt->execute()) {
-    echo "留言已成功刪除！";
-    // 返回到文章詳細頁面
-    header("Location: post_detail.php?id=" . intval($_GET['post_id']));
-    exit();
+    echo json_encode(["success" => true, "message" => "留言刪除成功"]);
 } else {
-    echo "<script>alert('刪除失敗，文章可能已不存在或權限不足。'); window.location.href='index.php';</script>";
+    error_log("刪除留言失敗：" . $stmt->error);
+    echo json_encode(["success" => false, "message" => "刪除失敗，請稍後再試"]);
 }
+exit();
 ?>

@@ -17,6 +17,15 @@ $query = "
 ";
 $postsResult = $conn->query($query);  // 使用不同變數儲存文章查詢結果
 
+// 查詢最新文章標題
+$latestPostsQuery = "
+    SELECT id, title 
+    FROM posts 
+    ORDER BY created_at DESC 
+    LIMIT 3
+";
+$latestPostsResult = $conn->query($latestPostsQuery); // 查詢最新文章標題
+
 // 查詢分類
 $sql = "SELECT name, slug, description FROM categories ORDER BY id ASC";
 $categoriesResult = $conn->query($sql);  // 使用不同變數儲存分類查詢結果
@@ -31,6 +40,7 @@ $categoriesResult = $conn->query($sql);  // 使用不同變數儲存分類查詢
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/post.css">
+    <link rel="stylesheet" href="../css/test.css">
     <script>
         function navigateToCategory(category) {
             if (category) {
@@ -73,7 +83,7 @@ $categoriesResult = $conn->query($sql);  // 使用不同變數儲存分類查詢
                 <div class="post">
                     <a href="post_detail.php?id=<?php echo $row['id']; ?>" class="post-link">
                         <?php
-                        // 根據 question_type 显示相应的文字
+                        // 根據 question_type 顯示相應的文字
                         switch ($row['question_type']) {
                             case 'type0':
                                 $question_type_text = '[問題]';
@@ -105,7 +115,13 @@ $categoriesResult = $conn->query($sql);  // 使用不同變數儲存分類查詢
                         ?>
                         <h3><?php echo htmlspecialchars($question_type_text); ?></h3>
                         <h3><?php echo htmlspecialchars($row['title']); ?></h3>
-                        <p><?php echo mb_substr(htmlspecialchars($row['content']), 0, 100); ?>...</p>
+                        <p>
+                            <?php 
+                            // 解碼 HTML 並限制內容長度
+                            $decoded_content = strip_tags(htmlspecialchars_decode($row['content'], ENT_QUOTES));
+                            echo mb_substr($decoded_content, 0, 100); 
+                            ?>...
+                        </p>
                     </a>
                     <span>由 <?php echo htmlspecialchars($row['username']); ?> 發布於 <?php echo $row['created_at']; ?></span>
                 </div>
@@ -118,14 +134,27 @@ $categoriesResult = $conn->query($sql);  // 使用不同變數儲存分類查詢
             ?>
         </div>
 
+        <!-- 最新文章區塊 -->
         <div class="latest-posts-section">
             <h2>最新文章</h2>
-            <ul>
-                <li><a href="#">最新文章 1</a></li>
-                <li><a href="#">最新文章 2</a></li>
-                <li><a href="#">最新文章 3</a></li>
+            <ul class="latest-posts-list">
+                <?php
+                if ($latestPostsResult->num_rows > 0):
+                    while ($row = $latestPostsResult->fetch_assoc()): ?>
+                        <li class="latest-post-item">
+                            <a href="post_detail.php?id=<?php echo $row['id']; ?>" class="latest-post-link">
+                                <?php echo htmlspecialchars($row['title']); ?>
+                            </a>
+                        </li>
+                <?php
+                    endwhile;
+                else:
+                    echo "<li>目前沒有最新文章。</li>";
+                endif;
+                ?>
             </ul>
         </div>
+
     </div>
 
     <?php include '../includes/footer.php'; ?>

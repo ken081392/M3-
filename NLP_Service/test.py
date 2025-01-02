@@ -1,7 +1,7 @@
-import requests
+from transformers import AutoTokenizer, AutoModel
 
-url = "http://127.0.0.1:5000/detect"
-data = {"content": "This is a bad text!"}
-
-response = requests.post(url, json=data)
-print(response.json())
+# 載入模型
+MODEL_NAME = "THUDM/chatglm-6b"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
+model = AutoModel.from_pretrained(MODEL_NAME, trust_remote_code=True).half().cuda()  # 使用 GPU
+model.eval()

@@ -8,17 +8,19 @@
 </head>
 <body>
     <footer class="footer">
-        <p>&copy; <?php echo date('Y'); ?> My Forum. All rights reserved.</p>
-        <div class="footer-links">
-            <a href="privacy.php">隱私政策</a>
-            <a href="terms.php">服務條款</a>
-            <a href="contact.php">聯絡我們</a>
-        </div>
-        <div class="social-media">
-            <a href="https://facebook.com"><img src="../assets/images/facebook-icon.png" alt="Facebook"></a>
-            <a href="https://twitter.com"><img src="../assets/images/twitter-icon.png" alt="Twitter"></a>
-        </div>
-    </footer>
+        <section class="footer-main">
+            <p>&copy; <?php echo date('Y'); ?> My Forum. All rights reserved.</p>
+            <nav class="footer-links">
+                <a href="../pages/privacy.php">隱私政策</a>
+                <a href="../pages/terms.php">服務條款</a>
+                <a href="../pages/contact.php">聯絡我們</a>
+            </nav>
+        </section>
+        <section class="social-media">
+            <a href="https://facebook.com" aria-label="Facebook">🌐 Facebook</a>
+            <a href="https://twitter.com" aria-label="Twitter">🐦 Twitter</a>
+        </section>
 
+    </footer>
 </body>
 </html>

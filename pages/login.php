@@ -1,5 +1,11 @@
 <?php
-session_start(); // 開啟 Session
+session_start();
+
+// 如果已經登入，直接跳轉到管理頁面
+if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+    header("Location: ../pages/profile.php");  // 登入後跳轉到管理員頁面
+    exit;
+}
 
 // 設定資料庫連接資訊
 $servername = "localhost";
@@ -39,12 +45,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 驗證用戶輸入的密碼是否與資料庫中的加密密碼匹配
         if (password_verify($password, $hashed_password)) {
             // 如果密碼正確，開始 Session 並保存用戶狀態
+            $_SESSION['admin_logged_in'] = true; // 設置登入狀態
             $_SESSION['user_id'] = $id; // 儲存用戶ID到 Session 中
             $_SESSION['username'] = $username; // 儲存用戶名到 Session 中
             $_SESSION['role'] = $role; // 儲存用戶角色到 Session 中
 
-            // 登入成功後重定向到用戶個人頁面
-            header("Location: profile.php");
+            // 登入成功後重定向到管理員頁面
+            header("Location: ../pages/profile.php");
             exit;
         } else {
             // 如果密碼錯誤，儲存錯誤訊息
@@ -60,11 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // 關閉資料庫連接
 $conn->close();
-
-// 若有錯誤訊息，顯示
-if ($error_message != '') {
-    echo "<p style='color: red;'>$error_message</p>";
-}
 ?>
 
 

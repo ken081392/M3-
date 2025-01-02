@@ -17,153 +17,107 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $post = $result->fetch_assoc();
 
     if (!$post) {
+        header('Content-Type: application/json');
         echo json_encode(["success" => false, "message" => "找不到文章內容！"]);
         exit();
     }
 } else {
+    header('Content-Type: application/json');
     echo json_encode(["success" => false, "message" => "無效的文章 ID！"]);
     exit();
 }
 
-// 處理文章編輯請求
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_post'])) {
-    $post_id = intval($_POST['post_id']);
-    
-    // 檢查是否為作者
-    $check_author_query = "SELECT author_id FROM posts WHERE id = ?";
-    $stmt = $conn->prepare($check_author_query);
-    $stmt->bind_param("i", $post_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $post = $result->fetch_assoc();
+// 不雅詞語檢測（調用 NLP 服務）
+function contains_prohibited_words($content) {
+    $url = "http://192.168.0.44:5000/analyze"; // NLP API 的地址
+    $data = json_encode(["text" => $content]);
 
-    if ($post && $post['author_id'] == $_SESSION['user_id']) {
-        header("Location: edit_post.php?id=$post_id");
-        exit();
-    } else {
-        echo json_encode(["success" => false, "message" => "權限不足，無法編輯文章。"]);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if ($response) {
+        $result = json_decode($response, true);
+        if (isset($result['status']) && $result['status'] === 'toxic') {
+            return $result['found_words']; // 返回找到的不雅字詞
+        }
     }
+    return false;
 }
 
 // 處理留言提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_comment'])) {
-    if (!isset($_SESSION['user_id'])) {
-        echo "請先登入後才能留言。";
-        exit();
-    }
-
     $comment_content = trim($_POST['comment_content']);
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['user_id'] ?? null;
 
-    if (!empty($comment_content)) {
-        $insert_query = "INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, NOW())";
-        $insert_stmt = $conn->prepare($insert_query);
-
-        if ($insert_stmt === false) {
-            die("SQL 錯誤: " . $conn->error);
-        }
-
-        $insert_stmt->bind_param("iis", $id, $user_id, $comment_content);
-        $insert_stmt->execute();
-
-        if ($insert_stmt->affected_rows > 0) {
-            // 留言成功，重定向到文章詳細頁
-            header("Location: post_detail.php?id=$id");
-            exit();
+    if (!$user_id) {
+        echo "<script>alert('請先登入後再留言！');</script>";
+    } else {
+        $prohibited_words = contains_prohibited_words($comment_content);
+        if ($prohibited_words) {
+            $words = implode(", ", $prohibited_words);
+            echo "<script>alert('留言內容包含不雅字詞: {$words}，請修改後再提交！');</script>";
         } else {
-            // 留言失敗
-            echo "留言失敗，請重試。";
-            exit();
+            $comment_query = "INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, NOW())";
+            $stmt = $conn->prepare($comment_query);
+            $stmt->bind_param("iis", $id, $user_id, $comment_content);
+            if ($stmt->execute()) {
+                header("Location: post_detail.php?id=$id");
+                exit();
+            } else {
+                echo "<script>alert('留言發表失敗，請稍後再試！');</script>";
+            }
         }
-
-        $insert_stmt->close();
-    } else {
-        // 留言內容為空
-        echo "留言內容不能為空。";
-        exit();
     }
 }
 
-// 處理留言刪除
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
-    $comment_id = intval($_POST['comment_id']);
-
-    if ($comment_id <= 0) {
-        echo json_encode(["success" => false, "message" => "無效的留言 ID"]);
-        exit();
-    }
-
-    $check_author_query = "SELECT user_id FROM comments WHERE id = ?";
-    $stmt = $conn->prepare($check_author_query);
-    $stmt->bind_param("i", $comment_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $comment = $result->fetch_assoc();
-
-    if (!$comment) {
-        echo json_encode(["success" => false, "message" => "留言不存在"]);
-        exit();
-    }
-
-    if ($comment['user_id'] != $_SESSION['user_id']) {
-        echo json_encode(["success" => false, "message" => "權限不足"]);
-        exit();
-    }
-
-    $delete_query = "DELETE FROM comments WHERE id = ?";
-    $stmt = $conn->prepare($delete_query);
-    $stmt->bind_param("i", $comment_id);
-
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "留言刪除成功"]);
-    } else {
-        echo json_encode(["success" => false, "message" => "刪除失敗，請稍後再試"]);
-    }
-    exit();
-}
-
-// 處理留言通報
+// 防止重複通報
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_comment'])) {
-    if (!isset($_SESSION['user_id'])) {
+    $comment_id = intval($_POST['comment_id']);
+    $reason = trim($_POST['reason']);
+    $user_id = $_SESSION['user_id'] ?? null;
+
+    if (!$user_id) {
         echo json_encode(["success" => false, "message" => "請先登入後才能通報"]);
         exit();
     }
 
-    $comment_id = intval($_POST['comment_id']);
-    $reason = trim($_POST['reason']);
-    $reporter_id = $_SESSION['user_id'];
+    // 檢查是否已經通報過該留言
+    $check_query = "SELECT 1 FROM reports_comment WHERE comment_id = ? AND user_id = ?";
+    $check_stmt = $conn->prepare($check_query);
+    $check_stmt->bind_param("ii", $comment_id, $user_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
 
-    if (empty($reason)) {
-        echo json_encode(["success" => false, "message" => "請填寫通報原因"]);
+    if ($check_result->num_rows > 0) {
+        echo json_encode(["success" => false, "message" => "您已經通報過這則留言！"]);
         exit();
     }
 
-    // 新增調試資訊記錄
-    error_log("準備插入通報資料：comment_id={$comment_id}, reporter_id={$reporter_id}, reason={$reason}");
-
-    // 插入通報資料
+    // 插入通報資料到 reports_comment 表
     $insert_query = "INSERT INTO reports_comment (comment_id, user_id, reason, reported_at) VALUES (?, ?, ?, NOW())";
     $stmt = $conn->prepare($insert_query);
-
-    if (!$stmt) {
-        error_log("SQL 準備失敗：" . $conn->error);
-        echo json_encode(["success" => false, "message" => "系統錯誤，請稍後再試"]);
-        exit();
-    }
-
-    $stmt->bind_param("iis", $comment_id, $reporter_id, $reason);
+    $stmt->bind_param("iis", $comment_id, $user_id, $reason);
 
     if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "留言通報已提交"]);
+        echo json_encode(["success" => true, "message" => "留言通報成功"]);
     } else {
-        // 新增錯誤日誌
-        error_log("通報資料插入失敗：" . $stmt->error);
-        echo json_encode(["success" => false, "message" => "提交失敗，請稍後再試"]);
+        // 如果是因為唯一性約束導致的錯誤，返回特定訊息
+        if ($stmt->errno === 1062) {
+            echo json_encode(["success" => false, "message" => "您已經通報過這則留言！"]);
+        } else {
+            error_log("SQL 執行失敗：" . $stmt->error);
+            echo json_encode(["success" => false, "message" => "通報失敗，請稍後再試"]);
+        }
     }
     $stmt->close();
     exit();
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -189,65 +143,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_comment'])) {
                 dropdowns.forEach((dropdown) => dropdown.classList.remove("active"));
             });
 
-            // 文章編輯邏輯
-            document.querySelectorAll(".edit-post").forEach(button => {
+            // 留言刪除邏輯
+            document.querySelectorAll(".delete-comment").forEach(button => {
                 button.addEventListener("click", function () {
-                    console.log("跳轉到 edit_post.php");
-                    // 允許默認超鏈接行為，不阻止跳轉
-                });
-            });
-
-            // 留言編輯邏輯
-            document.querySelectorAll(".edit-comment").forEach(button => {
-                button.addEventListener("click", function (event) {
-                    event.preventDefault();
                     const commentId = this.getAttribute("data-comment-id");
-                    const newContent = prompt("請輸入新的留言內容：");
-                    if (newContent) {
-                        fetch("edit_comment.php", {
+                    if (confirm("確定要刪除此留言嗎？")) {
+                        fetch("../pages/delete_comment.php", {
                             method: "POST",
                             headers: {
-                                "Content-Type": "application/json"
+                                "Content-Type": "application/x-www-form-urlencoded"
                             },
-                            body: JSON.stringify({ id: commentId, content: newContent })
+                            body: `comment_id=${commentId}`
                         })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("伺服器回傳錯誤");
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             if (data.success) {
-                                alert("留言已更新！");
+                                alert("留言已刪除");
                                 location.reload();
                             } else {
-                                alert("留言更新失敗：" + data.error);
+                                alert("刪除失敗：" + data.message);
                             }
-                        });
+                        })
+                        .catch(error => console.error("刪除請求失敗：", error));
                     }
                 });
             });
 
             // 留言通報邏輯
-            document.addEventListener("DOMContentLoaded", function () {
-            // 留言通報邏輯
-            document.querySelectorAll(".report-comment-button").forEach(button => {
+            document.querySelectorAll(".report-comment").forEach(button => {
                 button.addEventListener("click", function () {
                     const commentId = this.getAttribute("data-comment-id");
                     const reason = prompt("請輸入通報原因：");
 
                     if (reason) {
-                        fetch("report_comments.php", {  // 發送請求到 report_comments.php
+                        fetch("../pages/report_comment.php", {
                             method: "POST",
                             headers: {
-                                "Content-Type": "application/json"
+                                "Content-Type": "application/x-www-form-urlencoded"
                             },
-                            body: JSON.stringify({
-                                report_comment: true,
-                                comment_id: commentId,
-                                reason: reason
-                            })
+                            body: `comment_id=${commentId}&reason=${encodeURIComponent(reason)}`
                         })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("伺服器回傳錯誤");
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             if (data.success) {
                                 alert("通報成功！");
+                            } else if (data.message === "您已經通報過這則留言！") {
+                                alert("您已經通報過這則留言！");
                             } else {
                                 alert("通報失敗：" + data.message);
                             }
@@ -256,10 +207,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_comment'])) {
                     }
                 });
             });
-        });
+            // 留言編輯邏輯
+            document.querySelectorAll(".edit-comment").forEach(button => {
+                button.addEventListener("click", function () {
+                    const commentId = this.getAttribute("data-comment-id");
+                    const newContent = prompt("請輸入新的留言內容：");
+
+                    if (newContent) {
+                        fetch("../pages/edit_comment.php", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded"
+                            },
+                            body: `comment_id=${commentId}&content=${encodeURIComponent(newContent)}`
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("伺服器回傳錯誤");
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                alert("留言已更新！");
+                                location.reload();
+                            } else {
+                                alert("更新失敗：" + data.message);
+                            }
+                        })
+                        .catch(error => console.error("編輯請求失敗：", error));
+                    }
+                });
+            });
         });
     </script>
-
     <style>
         body {
             margin: 0;
@@ -466,7 +447,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_comment'])) {
 
     <div class="container">
         <div class="user-sidebar">
-            <img src="../images/<?php echo htmlspecialchars($post['avatar'] ?? 'default_avatar.png'); ?>" alt="使用者頭像">
+            <?php 
+                // 判斷使用者是否有上傳頭像
+                if (!empty($post['avatar'])) {
+                    $avatar = htmlspecialchars($post['avatar']);
+                } else {
+                    // 根據性別設置預設圖片
+                    $gender = $post['gender'] ?? 'male'; // 預設為男性
+                    $avatar = $gender === 'female' ? '../assets/img/female.png' : '../assets/img/male.png';
+                }
+            ?>
+            <img src="<?php echo $avatar; ?>" alt="使用者頭像">
             <div class="user-info">
                 <div class="level">LV. <?php echo htmlspecialchars($post['level'] ?? 1); ?></div>
                 <div class="gp">GP <?php echo htmlspecialchars($post['gp'] ?? 0); ?></div>
@@ -476,25 +467,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_comment'])) {
 
         <div class="content-section">
             <div class="post-content">
-                <h2><?php echo htmlspecialchars($post['title']); ?></h2>
+                <h2><?php echo htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8'); ?></h2>
                 <div class="post-header">
-                    由 <strong><?php echo htmlspecialchars($post['username']); ?></strong> 發布於 <?php echo $post['created_at']; ?>
+                    由 <strong><?php echo htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8'); ?></strong> 發布於 <?php echo htmlspecialchars($post['created_at'], ENT_QUOTES, 'UTF-8'); ?>
                 </div>
-                <p><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+
+                <!-- 顯示文章內容 -->
+                <div><?php echo nl2br(htmlspecialchars_decode($post['content'], ENT_QUOTES)); ?></div>
+
+                <!-- 顯示圖片 -->
+                <?php if (!empty($post['image_path'])): ?>
+                    <div class="post-image">
+                        <img src="<?php echo htmlspecialchars($post['image_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="文章圖片" style="max-width: 100%; height: auto;">
+                    </div>
+                <?php endif; ?>
+
+                <!-- 顯示影片 -->
+                <?php if (!empty($post['video_path'])): ?>
+                    <div class="post-video">
+                        <video controls style="max-width: 100%; height: auto;">
+                            <source src="<?php echo htmlspecialchars($post['video_path'], ENT_QUOTES, 'UTF-8'); ?>" type="video/mp4">
+                            您的瀏覽器不支援影片播放。
+                        </video>
+                    </div>
+                <?php endif; ?>
+
+                <!-- 編輯、刪除、通報功能 -->
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <div class="dropdown-menu-container">
                         <button class="dropdown-button">⋮</button>
                         <div class="dropdown-menu">
                             <?php if ($_SESSION['user_id'] == $post['author_id']): ?>
-                                <a href="edit_post.php?id=<?php echo $post['id']; ?>" class="edit-post">編輯文章</a>
-                                <a href="delete_post.php?id=<?php echo $post['id']; ?>" onclick="return confirm('確定要刪除此文章嗎？');">刪除文章</a>
+                                <a href="edit_post.php?id=<?php echo htmlspecialchars($post['id'], ENT_QUOTES, 'UTF-8'); ?>" class="edit-post">編輯文章</a>
+                                <a href="delete_post.php?id=<?php echo htmlspecialchars($post['id'], ENT_QUOTES, 'UTF-8'); ?>" onclick="return confirm('確定要刪除此文章嗎？');">刪除文章</a>
+                                <hr>
                             <?php endif; ?>
-                            <a href="report_post.php?id=<?php echo $post['id']; ?>" onclick="return confirm('確定要通報此文章嗎？');">通報文章</a>
+                            <a href="report_post.php?id=<?php echo htmlspecialchars($post['id'], ENT_QUOTES, 'UTF-8'); ?>" onclick="return confirm('確定要通報此文章嗎？');">通報文章</a>
                         </div>
                     </div>
                 <?php endif; ?>
-
             </div>
+
             <div class="comment-form">
                 <h3>發表留言</h3>
                 <?php if (isset($_SESSION['user_id'])): ?>
@@ -521,36 +534,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_comment'])) {
 
                 if ($comments_result->num_rows > 0):
                     while ($comment = $comments_result->fetch_assoc()): ?>
-                        <div class="comment" id="comment-<?php echo $comment['id']; ?>">
+                        <div class="comment">
                             <strong><?php echo htmlspecialchars($comment['username']); ?>：</strong>
-                            <p id="content-<?php echo $comment['id']; ?>"><?php echo nl2br(htmlspecialchars($comment['content'])); ?></p>
+                            <p><?php echo nl2br(htmlspecialchars($comment['content'])); ?></p>
                             <small><?php echo $comment['created_at']; ?></small>
 
                             <?php if (isset($_SESSION['user_id'])): ?>
                                 <div class="dropdown-menu-container">
                                     <button class="dropdown-button">⋮</button>
                                     <div class="dropdown-menu">
-                                        <!-- 通報留言：登入用戶可見 -->
-                                        <a href="#" class="report-comment" data-comment-id="<?php echo $comment['id']; ?>" data-post-id="<?php echo $post['id']; ?>">通報留言</a>
-
-                                        <!-- 編輯與刪除留言：僅限留言作者可見 -->
+                                        <a href="#" class="report-comment" data-comment-id="<?php echo $comment['id']; ?>">通報留言</a>
                                         <?php if ($_SESSION['user_id'] == $comment['user_id']): ?>
-                                            <br>
+                                            <hr>
                                             <a href="#" class="edit-comment" data-comment-id="<?php echo $comment['id']; ?>">編輯留言</a>
-                                            <a href="#" class="delete-comment" data-comment-id="<?php echo $comment['id']; ?>" data-post-id="<?php echo $post['id']; ?>">刪除留言</a>
+                                            <a href="#" class="delete-comment" data-comment-id="<?php echo $comment['id']; ?>">刪除留言</a>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endif; ?>
-
                         </div>
                     <?php endwhile;
                 else: ?>
                     <p>目前沒有留言，成為第一個留言的人吧！</p>
-                <?php endif;
-
-                $comment_stmt->close();
-                ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>

@@ -1,0 +1,77 @@
+/forum-project
+
+├── **/assets** # 靜態資源目錄（圖片、字體等）
+│   └── **/images**
+│       ├── logo.png       # 網站標誌
+│       ├── category1.jpg  # 消除貧窮 (SDG 1)
+│       ├── category2.jpg  # 消除飢餓 (SDG 2)
+│       ├── category3.jpg  # 良好健康和福祉 (SDG 3)
+│       ├── category4.jpg  # 優質教育 (SDG 4)
+│       ├── category5.jpg  # 性別平等 (SDG 5)
+│       ├── category6.jpg  # 乾淨水與衛生 (SDG 6)
+│       ├── category7.jpg  # 可負擔的潔淨能源 (SDG 7)
+│       ├── category8.jpg  # 尊嚴就業與經濟發展 (SDG 8)
+│       ├── category9.jpg  # 產業創新與基礎建設 (SDG 9)
+│       ├── category10.jpg # 減少不平等 (SDG 10)
+│       ├── category11.jpg # 永續城市與社區 (SDG 11)
+│       ├── category12.jpg # 負責任的消費與生產 (SDG 12)
+│       ├── category13.jpg # 氣候行動 (SDG 13)
+│       ├── category14.jpg # 保育海洋生態 (SDG 14)
+│       ├── category15.jpg # 保育陸域生態 (SDG 15)
+│       ├── category16.jpg # 和平正義與有力的制度 (SDG 16)
+│       └── category17.jpg # 夥伴關係 (SDG 17)
+
+├── **/css** # 樣式檔目錄
+│   ├── style.css         # 通用的主樣式
+│   ├── form.css          # 表單樣式（登入、註冊等）
+│   ├── header.css        # 頁首樣式
+│   ├── layout.css        # 版面佈局（包含分類欄、文章區等）
+│   ├── post.css          # 文章區域樣式
+│   ├── modal.css         # 彈窗相關樣式
+│   ├── footer.css        # 頁尾樣式
+│   └── buttons.css       # 按鈕樣式
+
+├── **/js** # JavaScript 檔案目錄
+│   └── main.js          # 全部的 JS 行為
+
+├── **/includes** # 共用 PHP 檔（如 header、footer、DB 連接等）
+│   ├── db_connection.php # 資料庫連接設定
+│   ├── header.php        # 頁首範本
+│   ├── footer.php        # 頁尾
+│   └── check_role.php    # 用戶角色檢查
+
+├── **/pages** # 獨立的 PHP 頁面文件
+│   ├── index.php         # 首頁（顯示帖子列表）
+│   ├── login.php         # 登入頁面
+│   ├── logout.php        # 登出邏輯
+│   ├── register.php      # 註冊頁面
+│   ├── profile.php       # 用戶資料頁面
+│   ├── edit-profile.php  # 編輯用戶資料
+│   ├── create_post.php   # 發帖頁面
+│   ├── post_detail.php   # 帖子詳情頁面
+│   ├── search.php        # 搜索結果頁面
+│   ├── submit_question.php # 問題提交頁面
+│   ├── category.php      # 分類管理頁面
+│   ├── edit_post.php     # 編輯帖子
+│   ├── delete_post.php   # 刪除帖子
+│   ├── edit_comment.php  # 編輯評論
+│   ├── delete_comment.php # 刪除評論
+│   ├── report_post.php   # 舉報帖子頁面
+│   ├── report_comment.php # 舉報評論頁面
+│   └── game.php          # 小遊戲頁面
+
+├── **/components** # 共用的可重用 PHP 文件
+│   ├── post_card.php     # 帖子卡片組件
+│   └── search_bar.php    # 搜尋欄組件
+
+├── **/admin** # 管理後台相關文件
+│   ├── admin_dashboard.php # 管理儀表板
+│   ├── delete_user.php     # 刪除用戶功能
+│   └── edit_user.php       # 編輯用戶功能
+
+├── **/nlp_service** # NLP 服務相關檔案
+│   ├── nlp_service.py     # NLP API 服務
+│   ├── test.py            # 測試 NLP API
+│   └── toxic_keywords.txt # 敏感詞列表
+
+└── **/uploads** # 用戶上傳的文件儲存夾（例如圖片等）

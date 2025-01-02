@@ -9,8 +9,8 @@
 <body>
     <header class="header">
         <div class="logo-title">
-            <a href="index.php"><img src="../assets/img/logo.png" alt="Logo"></a>
-            <h1><a href="index.php">M3論壇網站</a></h1>
+            <a href="../pages/index.php"><img src="../assets/img/logo.png" alt="Logo"></a>
+            <h1><a href="../pages/index.php">M3論壇網站</a></h1>
         </div>
         <div class="center-search">
             <form action="search.php" method="GET" class="search-form">
@@ -21,11 +21,11 @@
         <div class="user-menu">
             <?php if (isset($_SESSION['username'])): ?>
                 <span>歡迎，<?php echo $_SESSION['username']; ?></span>
-                <a href="profile.php" class="profile-link">個人資料</a>
-                <a href="logout.php" class="logout-link">登出</a>
+                <a href="../pages/profile.php" class="profile-link">個人資料</a>
+                <a href="../pages/logout.php" class="logout-link">登出</a>
             <?php else: ?>
-                <a href="login.php" class="login-link">登入</a>
-                <a href="register.php" class="register-link">註冊</a>
+                <a href="../pages/login.php" class="login-link">登入</a>
+                <a href="../pages/register.php" class="register-link">註冊</a>
             <?php endif; ?>
         </div>
     </header>

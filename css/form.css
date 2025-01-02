@@ -1,69 +1,109 @@
+/* 主容器樣式 */
 .container {
-    background-color: white;
-    padding: 40px; /* 增加一些內邊距，讓表單看起來更寬鬆 */
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    padding: 40px; /* 增加內邊距 */
+    border-radius: 15px; /* 圓角設計 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* 更柔和的陰影 */
     width: 50%;
     max-width: 500px;
-    margin: 50px auto; /* 增加上邊距讓表單位於頁面中間 */
+    margin: 50px auto;
     text-align: center;
+    font-family: 'Arial', sans-serif;
 }
 
-/* 修改標題的樣式 */
+/* 標題樣式 */
 .container h2 {
-    margin-bottom: 30px; /* 增加下邊距 */
-    font-size: 24px; /* 調整字體大小 */
-    color: #333;
+    margin-bottom: 30px;
+    font-size: 26px; /* 增大字體 */
+    color: #333333;
+    font-weight: bold;
 }
 
 /* 表單欄位樣式 */
 .container input[type="text"],
 .container input[type="password"],
 .container input[type="email"],
-.container input[type="date"] {
+.container input[type="date"],
+.container select {
     width: 100%;
-    padding: 12px; /* 調整內邊距，使欄位看起來更舒適 */
-    margin-bottom: 25px; /* 調整下邊距以增加間隔 */
+    padding: 12px;
+    margin-bottom: 20px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 8px; /* 較大的圓角 */
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.container input:focus, 
+.container select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.4); /* 柔和的藍色陰影 */
+}
+
+/* 下拉選擇框樣式 */
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 100%;
+    padding: 15px; /* 增加內邊距，讓下拉框更高 */
+    font-size: 18px; /* 增大字體大小 */
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* 增加圓角 */
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23999' d='M2 0L0 2h4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
     box-sizing: border-box;
 }
 
-input[type="text"]:focus, 
-input[type="password"]:focus, 
-input[type="email"]:focus, 
-input[type="date"]:focus {
+.custom-select select:focus {
     border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
     outline: none;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 
 /* 提交按鈕樣式 */
 .container input[type="submit"] {
     width: 100%;
-    padding: 12px;
-    background-color: #007bff;
+    padding: 15px;
+    background: linear-gradient(to right, #007bff, #0056b3); /* 漸變背景 */
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 18px; /* 增大字體以使按鈕更顯眼 */
+    border-radius: 8px;
+    font-size: 18px;
     cursor: pointer;
-}
-
-input[type="submit"]:active {
-    background-color: #003d82;
+    transition: background 0.3s ease;
 }
 
 .container input[type="submit"]:hover {
-    background-color: #0056b3;
+    background: linear-gradient(to right, #0056b3, #003d82); /* 更深的漸變 */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* 添加陰影效果 */
 }
 
-/* 返回註冊連結樣式 */
+.container input[type="submit"]:active {
+    transform: scale(0.98); /* 輕微縮小 */
+}
+
+/* 返回連結樣式 */
 .container .return-link {
     font-size: 16px;
     color: #007bff;
     text-decoration: none;
+    display: inline-block;
+    margin-top: 15px;
 }
 
 .container .return-link:hover {
@@ -71,56 +111,23 @@ input[type="submit"]:active {
     color: #0056b3;
 }
 
-.form-input {
-    width: 100%;
-    padding: 12px;
+/* 錯誤消息樣式 */
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 15px;
     margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
-.form-textarea {
-    width: 100%;
-    height: 150px;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    resize: none;
-    overflow-y: auto;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.submit-btn {
-    padding: 12px 20px;
-    background-color: #007bff;
-    border: none;
-    color: white;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.submit-btn:hover {
-    background-color: #0056b3;
-}
-
-.btn-template {
-    padding: 12px 20px;
-    background-color: #ff6666;
-    border: none;
-    color: white;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.btn-template:hover {
-    background-color: #ff4d4d;
+/* 表單標籤樣式 */
+.form-label {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #555555;
 }

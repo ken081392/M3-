@@ -1,0 +1,31 @@
+
+
+.latest-posts-section h2 {
+    font-size: 18px; /* 標題字體大小 */
+    font-weight: bold; /* 加粗 */
+    margin-bottom: 12px; /* 與清單的距離 */
+    color: #333; /* 字體顏色 */
+    text-align: center; /* 文字置中 */
+}
+
+.latest-posts-list {
+    list-style: none; /* 移除原點樣式 */
+    padding: 0; /* 移除內距 */
+    margin: 0; /* 移除外距 */
+}
+
+.latest-post-item {
+    margin-bottom: 8px; /* 每個項目的間距 */
+}
+
+.latest-post-link {
+    text-decoration: none; /* 移除底線 */
+    font-size: 16px; /* 字體大小 */
+    color: #007bff; /* 超連結顏色 */
+    transition: color 0.3s ease; /* 漸變效果 */
+}
+
+.latest-post-link:hover {
+    color: #0056b3; /* 滑鼠懸停時的顏色 */
+    text-decoration: underline; /* 滑鼠懸停時加上底線 */
+}

@@ -143,12 +143,20 @@ CloseCon($conn);
                                         $question_type_text = '[未知類型]';
                                 }
                                 ?>
-                                <h3><?php echo htmlspecialchars($question_type_text); ?></h3>
-                                <h3><?php echo htmlspecialchars($post['title']); ?></h3>
-                                <p><?php echo mb_substr(htmlspecialchars($post['content']), 0, 100); ?>...</p>
+                                <h3><?php echo htmlspecialchars($question_type_text, ENT_QUOTES, 'UTF-8'); ?></h3>
+                                <h3><?php echo htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                <p>
+                                    <?php 
+                                    // 解碼並去除標籤後截取摘要
+                                    $decoded_content = htmlspecialchars_decode($post['content'], ENT_QUOTES);
+                                    $stripped_content = strip_tags($decoded_content);
+                                    echo mb_substr($stripped_content, 0, 100); 
+                                    ?>...
+                                </p>
                             </a>
-                            <span>由 <?php echo htmlspecialchars($post['username']); ?> 發布於 <?php echo $post['created_at']; ?></span>
+                            <span>由 <?php echo htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8'); ?> 發布於 <?php echo $post['created_at']; ?></span>
                         </div>
+
                     <?php endwhile; ?>
                 <?php else: ?>
                     <p>此分類暫無文章。</p>
